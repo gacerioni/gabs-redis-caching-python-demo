@@ -11,7 +11,7 @@ metadata:
 type: Opaque
 data:
   DATABASE_URL: cG9zdGdyZXNxbDovL3B5dGhvbmdhYnM6c2VjcmV0NDJANTIuMy41MS4yMTQvcHl0aG9uZ2Ficw==  # base64 encoded
-  REDIS_URL: cmVkaXM6Ly9kZWZhdWx0OnNlY3JldDQyQHJlZGlzLTEyMTIxLmdhYnMtY2x1c3Rlci5yZWRpc2RlbW8uY29tOjEyMTIxLzA=  # base64 encoded
+  REDIS_URL: cmVkaXM6Ly9kZWZhdWx0OjV0d2tYdVFIbXMyS1V2a2cwZDh4UHVtM2pZRDVBaEpIQHJlZGlzLTEyMTY4LmMyOTkwNS51cy1lYXN0LTEtbXouZWMyLmNsb3VkLnJscmNwLmNvbToxMjE2OC8w  # base64 encoded
 ---
 apiVersion: apps/v1
 kind: Deployment
