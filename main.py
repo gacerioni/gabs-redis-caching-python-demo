@@ -124,4 +124,4 @@ if __name__ == "__main__":
     REDIS_URL = os.getenv("GABS_REDIS_URL")
     print("DATABASE URL MAIN: {0}".format(DATABASE_URL))
     print("REDIS URL MAIN: {0}".format(REDIS_URL))
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
