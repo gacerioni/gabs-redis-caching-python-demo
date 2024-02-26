@@ -1,3 +1,23 @@
+{{- if .Values.env.config}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gabs-redis-caching-python-demo.fullname" . }}
+data:
+{{ .Values.env.config | toYaml | indent 2 }}
+---
+{{- end}}
+
+{{- if .Values.env.secrets}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "gabs-redis-caching-python-demo.fullname" . }}
+stringData:
+{{ .Values.env.secrets | toYaml | indent 2 }}
+---
+{{- end}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,6 +66,17 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if or .Values.env.config .Values.env.secrets }}
+          envFrom:
+          {{- if .Values.env.config }}
+          - configMapRef:
+              name: {{ include "gabs-redis-caching-python-demo.fullname" . }}
+          {{- end }}
+          {{- if .Values.env.secrets }}
+          - secretRef:
+              name: {{ include "gabs-redis-caching-python-demo.fullname" . }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}

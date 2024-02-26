@@ -20,5 +20,5 @@ resources:
 env:
   config:
   secrets:
-    GABS_DATABASE_URL: <+secrets.getValue("org.gabsdatabaseurl")>
-    GABS_REDIS_URL: <+secrets.getValue("org.gabsredisurl")>
+    GABS_DATABASE_URL: <+secrets.getValue("gabsdatabaseurl")>
+    GABS_REDIS_URL: <+secrets.getValue("gabsredisurl")>
