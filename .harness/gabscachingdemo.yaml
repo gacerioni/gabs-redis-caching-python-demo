@@ -166,7 +166,7 @@ pipeline:
                   identifier: Build_and_Push_Container
                   spec:
                     connectorRef: gabsdh
-                    repo: gacerioni/gabs-redlock-demo
+                    repo: gacerioni/gabs-redis-caching-python-demo
                     tags:
                       - latest
                       - <+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>
