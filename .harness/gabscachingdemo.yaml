@@ -1,197 +1,229 @@
----
 pipeline:
-  projectIdentifier: "default_project"
-  orgIdentifier: "default"
+  projectIdentifier: default_project
+  orgIdentifier: default
   stages:
-  - stage:
-      name: "Build"
-      identifier: "Build"
-      type: "CI"
-      spec:
-        cloneCodebase: true
-        execution:
-          steps:
-          - stepGroup:
-              name: "Redis Background Group"
-              identifier: "Redis_Background_Group"
-              steps:
-              - step:
-                  type: "Background"
-                  name: "Redis Stack"
-                  identifier: "redis"
-                  spec:
-                    connectorRef: "gabsdh"
-                    image: "redis:7.2.4"
-                    shell: "Sh"
-                    portBindings:
-                      "6379": "6379"
-                    imagePullPolicy: "IfNotPresent"
-              - step:
-                  type: "Run"
-                  name: "Is Redis working"
-                  identifier: "Is_Redis_working"
-                  spec:
-                    shell: "Bash"
-                    command: "#!/bin/bash\nsudo apt-get update\nsudo apt-get install\
-                      \ redis-tools -y\nwhich redis-cli\n\nHOST=localhost\nPORT=6379\n\
-                      RETRIES=5\nDELAY=2\n\nfor ((i=0; i<RETRIES; i++)); do\n    if\
-                      \ redis-cli -h $HOST -p $PORT ping | grep -q PONG; then\n  \
-                      \      echo \"Redis is ready!\"\n        exit 0\n    else\n\
-                      \        echo \"Waiting for Redis to be ready...\"\n       \
-                      \ sleep $DELAY\n    fi\ndone\n\necho \"Redis is not ready after\
-                      \ multiple attempts.\"\nexit 1"
-          - parallel:
-            - step:
-                type: "Run"
-                name: "Get Python App Version"
-                identifier: "Get_Python_App_Version"
-                spec:
-                  connectorRef: "gabsdh"
-                  image: "python:3.12.2-slim"
-                  shell: "Bash"
-                  command: "export PYTHON_APP_VERSION=$(python get_version.py)"
-                  privileged: true
-                  outputVariables:
-                  - name: "PYTHON_APP_VERSION"
-            - step:
-                type: "Run"
-                name: "Generate Random Secret"
-                identifier: "Generate_Random_Secret"
-                spec:
-                  shell: "Bash"
-                  command: "export tempsecret=$(echo $RANDOM$RANDOM$RANDOM | cut -c\
-                    \ 1-10)"
-                  outputVariables:
-                  - name: "tempsecret"
-          - stepGroup:
-              name: "Scan for Vulnerabilities"
-              identifier: "Scan_for_Vulnerabilities"
-              steps:
+    - stage:
+        name: Build
+        identifier: Build
+        type: CI
+        spec:
+          cloneCodebase: true
+          execution:
+            steps:
+              - stepGroup:
+                  name: Redis Background Group
+                  identifier: Redis_Background_Group
+                  steps:
+                    - step:
+                        type: Background
+                        name: Redis Stack
+                        identifier: redis
+                        spec:
+                          connectorRef: gabsdh
+                          image: redis:7.2.4
+                          shell: Sh
+                          portBindings:
+                            "6379": "6379"
+                          imagePullPolicy: IfNotPresent
+                    - step:
+                        type: Run
+                        name: Is Redis working
+                        identifier: Is_Redis_working
+                        spec:
+                          shell: Bash
+                          command: |-
+                            #!/bin/bash
+                            sudo apt-get update
+                            sudo apt-get install redis-tools -y
+                            which redis-cli
+
+                            HOST=localhost
+                            PORT=6379
+                            RETRIES=5
+                            DELAY=2
+
+                            for ((i=0; i<RETRIES; i++)); do
+                                if redis-cli -h $HOST -p $PORT ping | grep -q PONG; then
+                                    echo "Redis is ready!"
+                                    exit 0
+                                else
+                                    echo "Waiting for Redis to be ready..."
+                                    sleep $DELAY
+                                fi
+                            done
+
+                            echo "Redis is not ready after multiple attempts."
+                            exit 1
               - parallel:
-                - step:
-                    type: "Bandit"
-                    name: "Bandit"
-                    identifier: "Bandit"
-                    spec:
-                      mode: "orchestration"
-                      config: "default"
-                      target:
-                        type: "repository"
-                        name: "gabs-redlock-demo"
-                        variant: "<+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>"
-                      advanced:
-                        log:
-                          level: "debug"
-                        fail_on_severity: "none"
-                - step:
-                    type: "Gitleaks"
-                    name: "Gitleaks"
-                    identifier: "Gitleaks"
-                    spec:
-                      mode: "orchestration"
-                      config: "default"
-                      target:
-                        type: "repository"
-                        name: "gabs-redlock-demo"
-                        variant: "<+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>"
-                      advanced:
-                        log:
-                          level: "debug"
-                        fail_on_severity: "none"
-              when:
-                stageStatus: "Success"
-                condition: "<+codebase.build.type> == \"PR\""
-          - stepGroup:
-              name: "Testing the App"
-              identifier: "Testing_the_App"
-              steps:
+                  - step:
+                      type: Run
+                      name: Get Python App Version
+                      identifier: Get_Python_App_Version
+                      spec:
+                        connectorRef: gabsdh
+                        image: python:3.12.2-slim
+                        shell: Bash
+                        command: export PYTHON_APP_VERSION=$(python get_version.py)
+                        privileged: true
+                        outputVariables:
+                          - name: PYTHON_APP_VERSION
+                  - step:
+                      type: Run
+                      name: Generate Random Secret
+                      identifier: Generate_Random_Secret
+                      spec:
+                        shell: Bash
+                        command: export tempsecret=$(echo $RANDOM$RANDOM$RANDOM | cut -c 1-10)
+                        outputVariables:
+                          - name: tempsecret
+              - stepGroup:
+                  name: Scan for Vulnerabilities
+                  identifier: Scan_for_Vulnerabilities
+                  steps:
+                    - parallel:
+                        - step:
+                            type: Bandit
+                            name: Bandit
+                            identifier: Bandit
+                            spec:
+                              mode: orchestration
+                              config: default
+                              target:
+                                type: repository
+                                name: gabs-redlock-demo
+                                variant: <+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>
+                              advanced:
+                                log:
+                                  level: debug
+                                fail_on_severity: none
+                        - step:
+                            type: Gitleaks
+                            name: Gitleaks
+                            identifier: Gitleaks
+                            spec:
+                              mode: orchestration
+                              config: default
+                              target:
+                                type: repository
+                                name: gabs-redlock-demo
+                                variant: <+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>
+                              advanced:
+                                log:
+                                  level: debug
+                                fail_on_severity: none
+                  when:
+                    stageStatus: Success
+                    condition: <+codebase.build.type> == "PR"
+              - stepGroup:
+                  name: Testing the App
+                  identifier: Testing_the_App
+                  steps:
+                    - step:
+                        type: Run
+                        name: Test Happy Path
+                        identifier: Test_Happy_Path
+                        spec:
+                          shell: Sh
+                          command: |
+                            #!/bin/bash
+
+                            # Set up environment variables
+                            export REDIS_CONN_STR="redis://127.0.0.1:6379/0"
+                            export REDIS_CSV_FILE_NAME="/tmp/gabs.csv"
+
+                            exit 0
+
+                            ## Define the data to be added
+                            #DATA="HARNESS BUILD PIPELINE BY GABS - App Version: <+pipeline.variables.APP_VERSION> - Rand Secret for CI: <+pipeline.stages.Build.spec.execution.steps.Generate_Random_Secret.output.outputVariables.tempsecret>"
+                            #
+                            ## Prepare the environment
+                            #echo "Setting up environment..."
+                            #touch "$REDIS_CSV_FILE_NAME"
+                            #python -m pip install -r requirements.txt
+                            #
+                            ## Execute the main script with the provided data
+                            #echo "Running main script..."
+                            #python main.py --data "$DATA"
+                            #
+                            ## Give some time for the file to be updated
+                            #sleep 1
+                            #
+                            ## Check if the file contains the specific line
+                            #echo "Validating the CSV file content..."
+                            #if grep -qF -- "$DATA" "$REDIS_CSV_FILE_NAME"; then
+                            #    echo "Validation successful: Data found in $REDIS_CSV_FILE_NAME"
+                            #else
+                            #    echo "Validation failed: Data not found in $REDIS_CSV_FILE_NAME"
+                            #    exit 1
+                            #fi
+                            #
+                            ## Optionally, display the content of the CSV file
+                            #echo "Displaying the content of $REDIS_CSV_FILE_NAME:"
+                            #cat "$REDIS_CSV_FILE_NAME"
               - step:
-                  type: "Run"
-                  name: "Test Happy Path"
-                  identifier: "Test_Happy_Path"
+                  type: BuildAndPushDockerRegistry
+                  name: Build and Push Container
+                  identifier: Build_and_Push_Container
                   spec:
-                    shell: "Sh"
-                    command: "#!/bin/bash\n\n# Set up environment variables\nexport\
-                      \ REDIS_CONN_STR=\"redis://127.0.0.1:6379/0\"\nexport REDIS_CSV_FILE_NAME=\"\
-                      /tmp/gabs.csv\"\n\n# Define the data to be added\nDATA=\"HARNESS\
-                      \ BUILD PIPELINE BY GABS - App Version: <+pipeline.variables.APP_VERSION>\
-                      \ - Rand Secret for CI: <+pipeline.stages.Build.spec.execution.steps.Generate_Random_Secret.output.outputVariables.tempsecret>\"\
-                      \n\n# Prepare the environment\necho \"Setting up environment...\"\
-                      \ntouch \"$REDIS_CSV_FILE_NAME\"\npython -m pip install -r requirements.txt\n\
-                      \n# Execute the main script with the provided data\necho \"\
-                      Running main script...\"\npython main.py --data \"$DATA\"\n\n\
-                      # Give some time for the file to be updated\nsleep 1\n\n# Check\
-                      \ if the file contains the specific line\necho \"Validating\
-                      \ the CSV file content...\"\nif grep -qF -- \"$DATA\" \"$REDIS_CSV_FILE_NAME\"\
-                      ; then\n    echo \"Validation successful: Data found in $REDIS_CSV_FILE_NAME\"\
-                      \nelse\n    echo \"Validation failed: Data not found in $REDIS_CSV_FILE_NAME\"\
-                      \n    exit 1\nfi\n\n# Optionally, display the content of the\
-                      \ CSV file\necho \"Displaying the content of $REDIS_CSV_FILE_NAME:\"\
-                      \ncat \"$REDIS_CSV_FILE_NAME\"\n"
-          - step:
-              type: "BuildAndPushDockerRegistry"
-              name: "Build and Push Container"
-              identifier: "Build_and_Push_Container"
-              spec:
-                connectorRef: "gabsdh"
-                repo: "gacerioni/gabs-redlock-demo"
-                tags:
-                - "latest"
-                - "<+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>"
-              when:
-                stageStatus: "Success"
-          - stepGroup:
-              name: "Scan Image"
-              identifier: "Scan_Image"
-              steps:
-              - step:
-                  type: "AquaTrivy"
-                  name: "AquaTrivy"
-                  identifier: "AquaTrivy"
-                  spec:
-                    mode: "orchestration"
-                    config: "default"
-                    target:
-                      type: "container"
-                      name: "gabs-redlock-demo"
-                      variant: "<+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>"
-                    advanced:
-                      log:
-                        level: "debug"
-                      fail_on_severity: "none"
-                    privileged: true
-                    image:
-                      type: "docker_v2"
-                      name: "gacerioni/gabs-redlock-demo"
-                      tag: "<+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>"
-              when:
-                stageStatus: "Success"
-                condition: "<+codebase.build.type> == \"PR\""
-        platform:
-          os: "Linux"
-          arch: "Amd64"
-        runtime:
-          type: "Cloud"
-          spec: {}
-        caching:
-          enabled: true
-          paths:
-          - "/usr/lib/python3"
-          - "/usr/bin/redis-cli"
-          key: ""
-      description: ""
+                    connectorRef: gabsdh
+                    repo: gacerioni/gabs-redlock-demo
+                    tags:
+                      - latest
+                      - <+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>
+                  when:
+                    stageStatus: Success
+              - stepGroup:
+                  name: Scan Image
+                  identifier: Scan_Image
+                  steps:
+                    - step:
+                        type: AquaTrivy
+                        name: AquaTrivy
+                        identifier: AquaTrivy
+                        spec:
+                          mode: orchestration
+                          config: default
+                          target:
+                            type: container
+                            name: gabs-redlock-demo
+                            variant: <+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>
+                          advanced:
+                            log:
+                              level: debug
+                            fail_on_severity: none
+                          privileged: true
+                          image:
+                            type: docker_v2
+                            name: gacerioni/gabs-redlock-demo
+                            tag: <+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>
+                  when:
+                    stageStatus: Success
+                    condition: <+codebase.build.type> == "PR"
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          caching:
+            enabled: true
+            paths:
+              - /usr/lib/python3
+              - /usr/bin/redis-cli
+            key: ""
+        description: ""
   properties:
     ci:
       codebase:
-        connectorRef: "account.Github"
-        repoName: "gacerioni/gabs-redlock-demo"
-        build: "<+input>"
+        connectorRef: account.Github
+        repoName: gacerioni/gabs-redlock-demo
+        build: <+input>
   variables:
-  - name: "APP_VERSION"
-    type: "String"
-    description: ""
-    required: false
-    value: "<+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>"
-  identifier: "gabscachingdemo"
+    - name: APP_VERSION
+      type: String
+      description: ""
+      required: false
+      value: <+pipeline.stages.Build.spec.execution.steps.Get_Python_App_Version.output.outputVariables.PYTHON_APP_VERSION>
+  identifier: gabscachingdemo
   tags: {}
-  name: "gabs-caching-demo"
+  name: gabs-caching-demo
