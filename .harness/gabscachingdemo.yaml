@@ -259,6 +259,9 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
+        when:
+          pipelineStatus: Success
+          condition: 1 == 0
   properties:
     ci:
       codebase:
