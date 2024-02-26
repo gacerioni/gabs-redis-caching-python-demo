@@ -10,8 +10,8 @@ metadata:
   namespace: gabs-cache-demo
 type: Opaque
 data:
-  DATABASE_URL: cG9zdGdyZXNxbDovL3B5dGhvbmdhYnM6c2VjcmV0NDJANTIuMy41MS4yMTQvcHl0aG9uZ2Ficw==  # base64 encoded
-  REDIS_URL: cmVkaXM6Ly9kZWZhdWx0OjV0d2tYdVFIbXMyS1V2a2cwZDh4UHVtM2pZRDVBaEpIQHJlZGlzLTEyMTY4LmMyOTkwNS51cy1lYXN0LTEtbXouZWMyLmNsb3VkLnJscmNwLmNvbToxMjE2OC8w  # base64 encoded
+  GABS_DATABASE_URL: cG9zdGdyZXNxbDovL3B5dGhvbmdhYnM6c2VjcmV0NDJANTIuMy41MS4yMTQvcHl0aG9uZ2Ficw==  # base64 encoded
+  GABS_REDIS_URL: cmVkaXM6Ly9kZWZhdWx0OjV0d2tYdVFIbXMyS1V2a2cwZDh4UHVtM2pZRDVBaEpIQHJlZGlzLTEyMTY4LmMyOTkwNS51cy1lYXN0LTEtbXouZWMyLmNsb3VkLnJscmNwLmNvbToxMjE2OC8w  # base64 encoded
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -19,7 +19,7 @@ metadata:
   name: gabs-cache-deployment
   namespace: gabs-cache-demo
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: gabs-cache
@@ -34,7 +34,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: gabs-cache
-        image: gacerioni/gabs-redis-caching-python-demo:0.0.1-gabs  # Replace with your actual image
+        image: gacerioni/gabs-redis-caching-python-demo:1.0.0-redisvpcpeering  # Replace with your actual image
         imagePullPolicy: Always
         ports:
         - containerPort: 5000

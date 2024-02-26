@@ -20,7 +20,7 @@ class SoccerTeam(Base):
     stadium = Column(String, nullable=False)
 
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("GABS_DATABASE_URL")
 print("DATABASE URL MODELS: {0}".format(DATABASE_URL))
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)

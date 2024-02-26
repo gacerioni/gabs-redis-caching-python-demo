@@ -7,7 +7,7 @@ from models import Base, SoccerTeam  # Import the Base and the SoccerTeam model
 # Load environment variables
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("GABS_DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 

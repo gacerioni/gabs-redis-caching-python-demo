@@ -120,6 +120,8 @@ def load_clubs():
 
 
 if __name__ == "__main__":
-    DATABASE_URL = os.getenv("DATABASE_URL")
+    DATABASE_URL = os.getenv("GABS_DATABASE_URL")
+    REDIS_URL = os.getenv("GABS_REDIS_URL")
     print("DATABASE URL MAIN: {0}".format(DATABASE_URL))
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print("REDIS URL MAIN: {0}".format(REDIS_URL))
+    app.run(host='0.0.0.0', port=5001, debug=True)

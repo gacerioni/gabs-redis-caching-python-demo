@@ -2,7 +2,7 @@ import redis
 import os
 from datetime import timedelta
 
-r = redis.Redis.from_url(os.getenv("REDIS_URL"))
+r = redis.Redis.from_url(os.getenv("GABS_REDIS_URL"))
 
 
 def get_redis_object():

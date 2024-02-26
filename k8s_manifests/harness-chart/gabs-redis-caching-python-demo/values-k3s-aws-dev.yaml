@@ -1,0 +1,24 @@
+# using NodePort this time until I get my domain back
+service:
+  type: NodePort
+  port: 5000
+  nodePort: 30080
+
+tolerations:
+  - key: "node.kubernetes.io/disk-pressure"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+  config:
+  secrets:
+    GABS_DATABASE_URL: <+secrets.getValue("org.gabsdatabaseurl")>
+    GABS_REDIS_URL: <+secrets.getValue("org.gabsredisurl")>
