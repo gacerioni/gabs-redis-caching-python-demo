@@ -216,7 +216,7 @@ pipeline:
     ci:
       codebase:
         connectorRef: account.Github
-        repoName: gacerioni/gabs-redlock-demo
+        repoName: gacerioni/gabs-redis-caching-python-demo
         build: <+input>
   variables:
     - name: APP_VERSION
