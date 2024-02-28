@@ -9,7 +9,7 @@ def get_redis_object():
     return r
 
 
-def cache_data(key, data, ttl=10):
+def cache_data(key, data, ttl=20):
     r.setex(key, timedelta(seconds=ttl), value=data)
 
 

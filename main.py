@@ -1,8 +1,12 @@
 import os
 import csv
 import time
+import json
+from random import randrange, uniform
 
 from flask import Flask, request, render_template, jsonify
+
+from harness_featureflags import FeatureFlagClient
 from logger_config import setup_logger
 from metrics_config import CACHE_HITS, CACHE_MISSES, REQUEST_DURATION, HITS
 from database import Session, SoccerTeam, engine, Base
@@ -24,7 +28,6 @@ LATENCY = Histogram('service_latency_seconds', 'Service latency in seconds', ['t
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -36,6 +39,10 @@ def search():
     query = request.form['query']
     cached_result = get_cached_data(query)
 
+    ff_client = FeatureFlagClient()
+    demo_json = ff_client.get_demo_variation()
+    print("Type of demo_json: {0}".format(type(demo_json)))
+
     if cached_result:
         latency = time.time() - start_time
         CACHE_HITS.inc()
@@ -46,6 +53,13 @@ def search():
     else:
         session = Session()
         result = session.query(SoccerTeam).filter(SoccerTeam.name.contains(query)).all()
+
+        range_min = float(demo_json['min'])
+        range_max = float(demo_json['max'])
+        logger.info(f"Demo range: {range_min} - {range_max}")
+        random_demo_range = uniform(range_min,range_max)
+        time.sleep(random_demo_range)
+
         latency = time.time() - start_time
         HITS.labels(type='db').inc()
         CACHE_MISSES.inc()
