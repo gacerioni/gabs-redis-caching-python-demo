@@ -27,6 +27,7 @@ logger = setup_logger()
 LATENCY = Histogram('service_latency_seconds', 'Service latency in seconds', ['type'])
 
 app = Flask(__name__)
+ff_client = FeatureFlagClient()
 
 @app.route('/')
 def index():
@@ -39,9 +40,8 @@ def search():
     query = request.form['query']
     cached_result = get_cached_data(query)
 
-    ff_client = FeatureFlagClient()
     demo_json = ff_client.get_demo_variation()
-    print("Type of demo_json: {0}".format(type(demo_json)))
+    logger.info("Type of demo_json: {0}".format(type(demo_json)))
 
     if cached_result:
         latency = time.time() - start_time
@@ -57,7 +57,7 @@ def search():
         range_min = float(demo_json['min'])
         range_max = float(demo_json['max'])
         logger.info(f"Demo range: {range_min} - {range_max}")
-        random_demo_range = uniform(range_min,range_max)
+        random_demo_range = uniform(range_min, range_max)
         time.sleep(random_demo_range)
 
         latency = time.time() - start_time
